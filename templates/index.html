@@ -26,7 +26,7 @@
         const powerChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: labels+30,
                 datasets: [
                     {
                         label: 'power (W)',
@@ -99,7 +99,11 @@
         socket.on('sensor_data', function(data) {
             const now = new Date().toLocaleTimeString();
 
-            if (labels.length >= maxPoints) labels.shift();
+            if (labels.length >= maxPoints) {
+                labels.shift();
+                powerData.shift();
+                predictedData.shift();
+            }
             labels.push(now);
 
             function updateChart(chart, value) {
