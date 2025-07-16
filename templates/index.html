@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>스마트그리드 실시간 모니터링</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <h2>실시간 전력 모니터링</h2>
+    <canvas id="powerChart"></canvas>
+    <canvas id="currentChart"></canvas>
+    <canvas id="energyChart"></canvas>
+
+    <script>
+        const socket = io();
+
+        const timeLabels = [];
+        const maxPoints = 50;
+
+        function createChart(ctx, label, color) {
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timeLabels,
+                    datasets: [{
+                        label: label,
+                        data: [],
+                        borderColor: color,
+                        fill: false
+                    }]
+                },
+                options: {
+                    animation: false,
+                    responsive: true,
+                    scales: {
+                        x: {
+                            display: true
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        const powerChart = createChart(document.getElementById('powerChart'), '전력 (W)', 'blue');
+        const currentChart = createChart(document.getElementById('currentChart'), '전류 (A)', 'red');
+        const energyChart = createChart(document.getElementById('energyChart'), '에너지 (Wh)', 'green');
+
+        socket.on('sensor_data', function(data) {
+            const now = new Date().toLocaleTimeString();
+
+            if (timeLabels.length >= maxPoints) timeLabels.shift();
+            timeLabels.push(now);
+
+            function updateChart(chart, value) {
+                const data = chart.data.datasets[0].data;
+                if (data.length >= maxPoints) data.shift();
+                data.push(value);
+                chart.update();
+            }
+
+            updateChart(powerChart, data.power);
+            updateChart(currentChart, data.current);
+            updateChart(energyChart, data.energy);
+        });
+    </script>
+</body>
+</html>

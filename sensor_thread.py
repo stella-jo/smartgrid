@@ -1,0 +1,60 @@
+import minimalmodbus
+import serial
+import RPi.GPIO as GPIO
+import time
+
+RELAY_PIN = 17
+
+instrument = minimalmodbus.Instrument('/dev/serial0', 1)
+instrument.serial.baudrate = 9600
+instrument.serial.bytesize = 8
+instrument.serial.parity = serial.PARITY_NONE
+instrument.serial.stopbits = 1
+instrument.serial.timeout = 1
+instrument.mode = minimalmodbus.MODE_RTU
+
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(RELAY_PIN, GPIO.OUT)
+
+print(instrument)
+GPIO.output(RELAY_PIN, GPIO.LOW)
+
+def read_voltage():
+    v_raw = instrument.read_register(0, 0, 4)
+    return v_raw * 0.1
+    
+def read_current():
+    regs = instrument.read_registers(1, 2, 4)
+    raw = (regs[1] << 16) + regs[0]
+    return raw * 0.001
+
+def read_power():
+    regs = instrument.read_registers(3, 2, 4)
+    raw = (regs[1] << 16) + regs[0]
+    return raw * 0.1
+
+def read_energy():
+    regs = instrument.read_registers(5, 2, 4)
+    raw = (regs[1] << 16) + regs[0]
+    return raw * 1.0
+
+def sensor_loop(socketio):
+    while True:
+        try: 
+            current = read_current()
+            power = read_power()
+            energy = read_energy()
+
+            values = {
+                'current': round(current, 3),
+                'power': round(power, 1),
+                'energy': round(energy, 2),
+            }
+
+            print(values)
+            socketio.emit('sensor_data', values)
+            time.sleep(1)
+        except Exception as e: 
+            print(e)
+            time.sleep(2)
