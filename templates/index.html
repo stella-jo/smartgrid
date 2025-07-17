@@ -21,48 +21,6 @@
         const labels = [];
         const maxPoints = 60;
 
-        const powerData = [];
-        const predictedData = [];
-
-        const ctx = document.getElementById('powerChart').getContext('2d');
-
-        const powerChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'power (W)',
-                        data: powerData,
-                        borderColor: 'blue',
-                        fill: false,
-                        tension: 0.2
-                    },
-                    {
-                        label: 'predicted power (W)',
-                        data: predictedData,
-                        borderColor: 'orange',
-                        borderDash: [5, 5],
-                        fill: false,
-                        tension: 0.2
-                    }
-                ]
-            },
-            options: {
-                animation: false,
-                responsive: false,
-                scales: {
-                    x: {
-                        display: true
-                    },
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                maintainAspectRatio: false
-            }
-        });
-
         function createChart(ctx, label, color) {
             return new Chart(ctx, {
                 type: 'line',
@@ -93,27 +51,16 @@
 
         const currentChart = createChart(document.getElementById('currentChart'), '전류 (A)', 'red');
         const voltageChart = createChart(document.getElementById('voltageChart'), '전압 (V)', 'green');
+        const powerChart = createChart(document.getElementById('powerChart'), 'power (W)', 'blue');
 
         socket.on('sensor_data', function(data) {
             const now = new Date();
-            const label = now.toLocaleTimeString
-            const futureLabel = new Date(now.getTime() + 30 * 1000)
+            const label = now.toLocaleTimeString()
 
             if (labels.length >= maxPoints) {
                 labels.shift();
-                powerData.shift();
-                predictedData.shift();
             }
             labels.push(label);
-
-            powerData.push(data.power);
-            if (data.predicted_power !== null) {
-                predictedData.push({
-                    x: futureTime.toLocaleTimeString(),  // 여기만 쓰면 정렬이 깨질 수 있음
-                    y: data.predicted_power
-                });
-            }
-            powerChart.update();
 
             function updateChart(chart, value) {
                 const data = chart.data.datasets[0].data;
@@ -124,6 +71,7 @@
 
             updateChart(currentChart, data.current);
             updateChart(voltageChart, data.voltage);
+            updateChart(powerChart, data.power);
 
             window.addEventListener('resize', () => { powerChart.resize(); });
             window.addEventListener('resize', () => { currentChart.resize(); });
