@@ -4,8 +4,8 @@
     <title>스마트그리드 실시간 모니터링</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <!-- <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css"> -->
-    <link href="/static/style.css" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css">
+    <!-- <link href="/static/style.css" rel="stylesheet" type="text/css"> -->
 </head>
 <body>
     <h2>실시간 전력 모니터링</h2>
@@ -19,83 +19,93 @@
     </div>
 
     <div class="box">
-        <canvas id="powerChart" style="display: flex;"></canvas>
+        <canvas id="powerChart"></canvas>
         <canvas id="currentChart"></canvas>
         <canvas id="voltageChart"></canvas>
     </div>
 
-    <script>
-        const socket = io();
+<script>
+    const socket = io();
 
-        const labels = [];
-        const maxPoints = 60;
+    const labels = [];
+    const maxPoints = 60;
 
-        function createChart(ctx, label, color) {
-            return new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: [],
-                        borderColor: color,
-                        fill: false
-                    }]
+    function createChart(ctx, label, color) {
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label,
+                    data: [],
+                    borderColor: color,
+                    fill: false
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: false,
+                scales: {
+                    x: { display: true },
+                    y: { beginAtZero: true }
                 },
-                options: {
-                    animation: false,
-                    responsive: false,
-                    scales: {
-                        x: {
-                            display: true
-                        },
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    maintainAspectRatio: false
-                }
-            });
+                maintainAspectRatio: false
+            }
+        });
+    }
+
+    const currentChart = createChart(document.getElementById('currentChart'), '전류 (A)', 'red');
+    const voltageChart = createChart(document.getElementById('voltageChart'), '전압 (V)', 'green');
+    const powerChart = createChart(document.getElementById('powerChart'), 'power (W)', 'blue');
+
+    // ✅ 센서 데이터 수신 시 그래프 업데이트
+    socket.on('sensor_data', function(data) {
+        const now = new Date();
+        const label = now.toLocaleTimeString();
+
+        if (labels.length >= maxPoints) labels.shift();
+        labels.push(label);
+
+        function updateChart(chart, value) {
+            const dataList = chart.data.datasets[0].data;
+            if (dataList.length >= maxPoints) dataList.shift();
+            dataList.push(value);
+            chart.update();
         }
 
-        const currentChart = createChart(document.getElementById('currentChart'), '전류 (A)', 'red');
-        const voltageChart = createChart(document.getElementById('voltageChart'), '전압 (V)', 'green');
-        const powerChart = createChart(document.getElementById('powerChart'), 'power (W)', 'blue');
+        updateChart(currentChart, data.current);
+        updateChart(voltageChart, data.voltage);
+        updateChart(powerChart, data.power);
+    });
 
-        socket.on('sensor_data', function(data) {
-            const now = new Date();
-            const label = now.toLocaleTimeString()
+    // ✅ 릴레이 토글 함수
+    function toggleRelay() {
+        socket.emit('toggle_relay');
+    }
 
-            if (labels.length >= maxPoints) {
-                labels.shift();
-            }
-            labels.push(label);
+    // ✅ 릴레이 상태 업데이트 수신
+    socket.on('relay_status', function(status) {
+        document.getElementById('relay-status').innerText = '릴레이 상태: ' + (status ? 'ON' : 'OFF');
+    });
 
-            function updateChart(chart, value) {
-                const data = chart.data.datasets[0].data;
-                if (data.length >= maxPoints) data.shift();
-                data.push(value);
-                chart.update();
-            }
+    // ✅ 자동 제어 모드 체크박스 상태 전달
+    function toggleAutoMode() {
+        const mode = document.getElementById('autoMode').checked;
+        socket.emit('set_auto_mode', mode);
+    }
 
-            updateChart(currentChart, data.current);
-            updateChart(voltageChart, data.voltage);
-            updateChart(powerChart, data.power);
+    // ✅ 자동 모드 상태 서버로부터 수신 시 UI 반영
+    socket.on('auto_mode_status', function(mode) {
+        document.getElementById('autoMode').checked = mode;
+    });
 
-            function toggleRelay() {
-                socket.emit('toggle_relay');
-            }
+    // ✅ 창 크기 변경 시 리사이즈
+    window.addEventListener('resize', () => {
+        powerChart.resize();
+        currentChart.resize();
+        voltageChart.resize();
+    });
+</script>
 
-            socket.on('relay_status', function(status) {
-                document.getElementById('relay-status').innerText = '릴레이 상태: ' + (status ? 'ON' : 'OFF');
-            });
-
-            window.addEventListener('resize', () => {
-                powerChart.resize();
-                currentChart.resize();
-                voltageChart.resize();
-            });
-        });
-    </script>
 </body>
 </html>

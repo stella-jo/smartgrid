@@ -7,7 +7,7 @@ GPIO.setup(RELAY_PIN, GPIO.OUT)
 GPIO.output(RELAY_PIN, GPIO.LOW)
 
 def set_relay(state: bool):
-		GPIO.output(RELAY_PIN, GPIO.HIGH if state else GPIO.LOW)
+	GPIO.output(RELAY_PIN, GPIO.LOW if state else GPIO.HIGH)
 
 def get_relay_state():
-		return GPIO.input(RELAY_PIN) == GPIO.HIGH
+	return GPIO.input(RELAY_PIN) == GPIO.LOW

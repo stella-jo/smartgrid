@@ -5,7 +5,7 @@ from relay import set_relay
 import threading
 
 auto_mode = True
-relay_state = False
+relay_state = True
 lock = threading.Lock()
 
 def set_auto_mode(mode):
@@ -62,14 +62,16 @@ def sensor_loop(socketio):
             }
 
             if get_auto_mode():
-                if current > 0.3 and not relay_state:
-                    relay_state = True
-                    set_relay(True)
-                    socketio.emit('relay_status', False)
-                elif current < 0.2 and relay_state:
+                if current > 0.2 and relay_state:
+                    print("off")
                     relay_state = False
                     set_relay(False)
                     socketio.emit('relay_status', False)
+                elif current < 0.1 and not relay_state:
+                    print("on")
+                    relay_state = True
+                    set_relay(True)
+                    socketio.emit('relay_status', True)
 
             print(values)
             socketio.emit('sensor_data', values)
