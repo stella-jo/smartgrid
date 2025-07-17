@@ -18,6 +18,12 @@
         <p id="relay-status">릴레이 상태: </p>
     </div>
 
+    <div class="label">
+        <p id="power"></p>
+        <p id="current"></p>
+        <p id="voltage"></p>
+    </div>
+
     <div class="box">
         <canvas id="powerChart"></canvas>
         <canvas id="currentChart"></canvas>
@@ -28,7 +34,7 @@
     const socket = io();
 
     const labels = [];
-    const maxPoints = 60;
+    const maxPoints = 40;
 
     function createChart(ctx, label, color) {
         return new Chart(ctx, {
@@ -58,6 +64,10 @@
     const voltageChart = createChart(document.getElementById('voltageChart'), '전압 (V)', 'green');
     const powerChart = createChart(document.getElementById('powerChart'), 'power (W)', 'blue');
 
+    const power = document.getElementById('power')
+    const current = document.getElementById('current')
+    const voltage = document.getElementById('voltage')
+
     // ✅ 센서 데이터 수신 시 그래프 업데이트
     socket.on('sensor_data', function(data) {
         const now = new Date();
@@ -76,6 +86,10 @@
         updateChart(currentChart, data.current);
         updateChart(voltageChart, data.voltage);
         updateChart(powerChart, data.power);
+
+        power.innerText = "Power: " + String(data.power);
+        current.innerText = "Current: " + String(data.current);
+        voltage.innerText = "Voltage: " + String(data.voltage);
     });
 
     // ✅ 릴레이 토글 함수
