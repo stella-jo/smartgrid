@@ -2,10 +2,6 @@ import minimalmodbus
 import serial
 import RPi.GPIO as GPIO
 import time
-import numpy as np
-from sklearn.linear_model import LinearRegression
-
-RELAY_PIN = 17
 
 instrument = minimalmodbus.Instrument('/dev/serial0', 1)
 instrument.serial.baudrate = 9600
@@ -15,11 +11,7 @@ instrument.serial.stopbits = 1
 instrument.serial.timeout = 1
 instrument.mode = minimalmodbus.MODE_RTU
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(RELAY_PIN, GPIO.OUT)
-
 print(instrument)
-GPIO.output(RELAY_PIN, GPIO.LOW)
 
 def read_voltage():
     v_raw = instrument.read_register(0, 0, 4)

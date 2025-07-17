@@ -9,6 +9,11 @@
 </head>
 <body>
     <h2>실시간 전력 모니터링</h2>
+    <div class="relay-control">
+        <button onclick="toggleRelay()">릴레이 토글</button>
+        <p id="relay-status">릴레이 상태: </p>
+    </div>
+
     <div class="box">
         <canvas id="powerChart" style="display: flex;"></canvas>
         <canvas id="currentChart"></canvas>
@@ -73,9 +78,19 @@
             updateChart(voltageChart, data.voltage);
             updateChart(powerChart, data.power);
 
-            window.addEventListener('resize', () => { powerChart.resize(); });
-            window.addEventListener('resize', () => { currentChart.resize(); });
-            window.addEventListener('resize', () => { voltageChart.resize(); });
+            function toggleRelay() {
+                socket.emit('toggle_relay');
+            }
+
+            socket.on('relay_status', function(status) {
+                document.getElementById('relay-status').innerText = '릴레이 상태: ' + (status ? 'ON' : 'OFF');
+            });
+
+            window.addEventListener('resize', () => {
+                powerChart.resize();
+                currentChart.resize();
+                voltageChart.resize();
+            });
         });
     </script>
 </body>
