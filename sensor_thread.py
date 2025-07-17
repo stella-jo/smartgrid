@@ -1,7 +1,21 @@
 import minimalmodbus
 import serial
-import RPi.GPIO as GPIO
 import time
+from relay import set_relay
+import threading
+
+auto_mode = True
+relay_state = False
+lock = threading.Lock()
+
+def set_auto_mode(mode):
+    global auto_mode
+    with lock:
+        auto_mode = mode
+
+def get_auto_mode():
+    with lock:
+        return auto_mode
 
 instrument = minimalmodbus.Instrument('/dev/serial0', 1)
 instrument.serial.baudrate = 9600
@@ -33,6 +47,8 @@ def read_energy():
     return raw * 1.0
 
 def sensor_loop(socketio):
+    global relay_state
+
     while True:
         try: 
             current = read_current()
@@ -44,6 +60,16 @@ def sensor_loop(socketio):
                 'power': round(power, 1),
                 'voltage': round(voltage, 1),
             }
+
+            if get_auto_mode():
+                if current > 0.3 and not relay_state:
+                    relay_state = True
+                    set_relay(True)
+                    socketio.emit('relay_status', False)
+                elif current < 0.2 and relay_state:
+                    relay_state = False
+                    set_relay(False)
+                    socketio.emit('relay_status', False)
 
             print(values)
             socketio.emit('sensor_data', values)

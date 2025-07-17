@@ -4,13 +4,17 @@
     <title>스마트그리드 실시간 모니터링</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css">
-    <!-- <link href="/static/style.css" rel="stylesheet" type="text/css"> -->
+    <!-- <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" type="text/css"> -->
+    <link href="/static/style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
     <h2>실시간 전력 모니터링</h2>
     <div class="relay-control">
         <button onclick="toggleRelay()">릴레이 토글</button>
+        <label>
+            <input type="checkbox" id="autoMode" checked onchange="toggleAutoMode()">
+            auto mode
+        </label>
         <p id="relay-status">릴레이 상태: </p>
     </div>
 
