@@ -10,7 +10,7 @@
     <h2>실시간 전력 모니터링</h2>
     <canvas id="powerChart"></canvas>
     <canvas id="currentChart"></canvas>
-    <canvas id="energyChart"></canvas>
+    <canvas id="voltageChart"></canvas>
 
     <script>
         const socket = io();
@@ -94,7 +94,7 @@
         }
 
         const currentChart = createChart(document.getElementById('currentChart'), '전류 (A)', 'red');
-        const energyChart = createChart(document.getElementById('energyChart'), '에너지 (Wh)', 'green');
+        const voltageChart = createChart(document.getElementById('voltageChart'), '전압 (V)', 'green');
 
         socket.on('sensor_data', function(data) {
             const now = new Date().toLocaleTimeString();
@@ -119,6 +119,7 @@
             powerChart.update();
             updateChart(powerChart, data.power);
             updateChart(currentChart, data.current);
+            updateChart(voltageChart, data.voltage)
         });
     </script>
 </body>

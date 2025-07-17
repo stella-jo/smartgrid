@@ -60,7 +60,7 @@ def sensor_loop(socketio):
         try: 
             current = read_current()
             power = read_power()
-            energy = read_energy()
+            voltage = read_voltage()
 
             power_buffer.append(power)
             if len(power_buffer) > buffer_size:
@@ -72,7 +72,7 @@ def sensor_loop(socketio):
                 'current': round(current, 3),
                 'power': round(power, 1),
                 'predicted_power': round(pred_power, 1),
-                'energy': round(energy, 2),
+                'voltage': round(voltage, 1),
             }
 
             print(values)
