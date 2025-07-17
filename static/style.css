@@ -8,3 +8,13 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+.box {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: repeat(3, 1fr);
+}
+.box canvas {
+    width: 100% !important;
+    height: 100% !important;
+    
+}
